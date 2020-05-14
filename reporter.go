@@ -99,7 +99,7 @@ func (r *Reporter) entry(i int, e factom.ABEntry) {
 
 		fct := payout / 1e8
 		rest := payout % 1e8
-		msg = fmt.Sprint("Coinbase Descriptor:", len(entry.Outputs), "outputs, fct = ", fmt.Sprintf("%d.%d", fct, rest))
+		msg = fmt.Sprint("Coinbase Descriptor: ", len(entry.Outputs), " outputs, fct = ", fmt.Sprintf("%d.%d", fct, rest))
 	case *factom.AdminCoinbaseDescriptorCancel:
 		entry := e.(*factom.AdminCoinbaseDescriptorCancel)
 		msg = fmt.Sprint("CoinbaseDescriptorCancel:", field("Height", entry.DescriptorHeight), field("Index", entry.DescriptorIndex))
