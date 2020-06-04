@@ -6,35 +6,32 @@ import (
 	"time"
 
 	"github.com/FactomProject/factom"
+	monitor "github.com/WhoSoup/factom-monitor"
 )
 
 type Reporter struct {
 	Height  int64
+	monitor *monitor.Monitor
 	discord *DiscordHook
 }
 
 func (r *Reporter) Run() {
-	for {
-		m, err := factom.GetCurrentMinute()
-		if err != nil {
-			log.Println(err)
-			time.Sleep(time.Second)
-			continue
+	go func() {
+		for err := range r.monitor.NewErrorListener() {
+			log.Printf("[monitor error] %v", err)
 		}
-
-		if m.DirectoryBlockHeight > r.Height {
-			r.Height = m.DirectoryBlockHeight
-			r.newBlock()
-		}
-		time.Sleep(time.Second)
+	}()
+	for ev := range r.monitor.NewDBHeightListener() {
+		log.Printf("trying block %d", ev)
+		r.newBlock(ev)
 	}
 }
 
-func (r *Reporter) newBlock() {
+func (r *Reporter) newBlock(height int64) {
 	var ablock *factom.ABlock
 	var err error
 	for tries := 0; tries < 3; tries++ {
-		ablock, _, err = factom.GetABlockByHeight(r.Height)
+		ablock, _, err = factom.GetABlockByHeight(height)
 		if err != nil {
 			time.Sleep(time.Second * 5)
 			continue
@@ -42,10 +39,10 @@ func (r *Reporter) newBlock() {
 		break
 	}
 	if err != nil {
-		r.discord.SendMessage(fmt.Sprintf("unable to retrieve admin block for height %d after 3 tries: %v", r.Height, err))
+		r.discord.SendMessage(fmt.Sprintf("unable to retrieve admin block for height %d after 3 tries: %v", height, err))
 		return
 	}
-
+	r.Height = ablock.DBHeight
 	log.Printf("ABlock[%d] %d entries", ablock.DBHeight, len(ablock.ABEntries))
 	for i, e := range ablock.ABEntries {
 		r.entry(i, e)
@@ -59,9 +56,8 @@ func (r *Reporter) entry(i int, e factom.ABEntry) {
 
 	var msg string
 	switch e.(type) {
-	// deprecated
-	case *factom.AdminMinuteNumber:
-	case *factom.AdminDBSignature:
+	case *factom.AdminMinuteNumber: // deprecated
+	case *factom.AdminDBSignature: // deprecated
 	case *factom.AdminRevealHash:
 		entry := e.(*factom.AdminRevealHash)
 		msg = fmt.Sprint("Matryoshka Reveal Hash:", field("IdentityChain", entry.IdentityChainID), field("Matryoshka Hash", entry.MatryoshkaHash))

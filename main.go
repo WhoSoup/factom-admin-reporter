@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/FactomProject/factom"
+	monitor "github.com/WhoSoup/factom-monitor"
 	"github.com/go-ini/ini"
 )
 
@@ -23,16 +24,21 @@ func main() {
 	if factomd == "" {
 		log.Fatal("ini field \"factomd\" is empty")
 	}
+
+	mon, err := monitor.NewMonitor(factomd)
 	factom.SetFactomdServer(factomd)
-	min, err := factom.GetCurrentMinute()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Initializing at height", min.DirectoryBlockHeight, "minute", min.Minute)
+	_, height, min := mon.GetCurrentMinute()
+	fmt.Println("Initializing at height", height, "minute", min, "with factomd endpoint", factomd)
 
 	reporter := new(Reporter)
+	reporter.Height = height
+	reporter.monitor = mon
 	reporter.discord = NewDiscordHook(url)
+
 	if name := cfg.Section("reporter").Key("name").String(); name != "" {
 		reporter.discord.Name = name
 	}
