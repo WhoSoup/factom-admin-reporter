@@ -25,7 +25,7 @@ func main() {
 		log.Fatal("ini field \"factomd\" is empty")
 	}
 
-	mon, err := monitor.NewMonitor(factomd)
+	mon, err := monitor.NewMonitor(factomd + "/v2")
 	factom.SetFactomdServer(factomd)
 	if err != nil {
 		log.Fatal(err)

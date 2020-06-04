@@ -1,5 +1,5 @@
 [reporter]
-factomd = http://localhost:8088/v2
+factomd = http://localhost:8088
 webhook = https://discordapp.com/api/webhooks/...
 name = "Factom Admin Reporter"
 avatar = 
