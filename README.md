@@ -6,8 +6,8 @@ To configure, copy `config.ini.EXAMPLE` and rename it to `config.ini`. Place it 
 
 * `factomd`: This should point to a factomd API endpoint. Don't include trailing /v2/. 
 * `webhook`: The url to a discord webhook
-* `name`: The display name the bot should use (otherwise it's left up to the webhook setting)
-* `avatar`: The url to an avatar the bot should use (otherwise it's left up to the webhook setting)
+* `name`: The display name the bot should use. If unspecified, the default webhook setting is used
+* `avatar`: The url to an avatar the bot should use. If unspecified, the default webhook setting is used
 
 
 

@@ -30,18 +30,24 @@ func (r *Reporter) Run() {
 func (r *Reporter) newBlock(height int64) {
 	var ablock *factom.ABlock
 	var err error
-	for tries := 0; tries < 3; tries++ {
+
+	start := time.Now()
+	report := 12 // every minute @ 5 seconds
+	count := 0
+	for {
 		ablock, _, err = factom.GetABlockByHeight(height)
 		if err != nil {
+			count++
+			if count%report == 0 {
+				elapsed := time.Since(start)
+				r.discord.SendMessage(fmt.Sprintf("trying to retrieve admin block %d unsuccessfully for %s: %v", height, elapsed, err))
+			}
 			time.Sleep(time.Second * 5)
 			continue
 		}
 		break
 	}
-	if err != nil {
-		r.discord.SendMessage(fmt.Sprintf("unable to retrieve admin block for height %d after 3 tries: %v", height, err))
-		return
-	}
+
 	r.Height = ablock.DBHeight
 	log.Printf("ABlock[%d] %d entries", ablock.DBHeight, len(ablock.ABEntries))
 	for i, e := range ablock.ABEntries {
